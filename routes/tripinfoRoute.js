@@ -1,8 +1,8 @@
 import express from "express";
-import tripinfo from "../controllers/tripinfoController.js";
+import * as tripInfo from "../controllers/tripinfoController.js";
 
 const router = express.Router();
 
-router.route("/tripinfo").get(tripinfo);
+router.route("/tripinfo").get(tripInfo.tripInfo).post(tripInfo.createTrip);
 
 export default router;
