@@ -4,9 +4,13 @@ import { randomUUID } from "crypto";
 
 const knex = initKnex(configuration);
 
-const tripInfo = async (_req, res) => {
+const tripInfo = async (req, res) => {
+  const { id } = req.params;
+
   try {
-    const response = await knex("events").select("eventId", "name");
+    const response = await knex("events")
+      .select("eventId", "name", "startDate", "endDate")
+      .where("eventId", id);
     res.status(200).json(response);
   } catch (error) {
     console.error(error);
@@ -15,17 +19,17 @@ const tripInfo = async (_req, res) => {
 };
 
 const createTrip = async (req, res) => {
-  const { name } = req.body;
+  const { name, startDate, endDate } = req.body;
 
-  if (!name) {
+  if (!name || !startDate || !endDate) {
     return res.status(400).json({
-      message: "Please make sure to provide event name",
+      message: "Please make sure to provide event name, start and end date",
     });
   }
 
   try {
     const eventId = randomUUID();
-    await knex("events").insert({ eventId, name });
+    await knex("events").insert({ eventId, name, startDate, endDate });
 
     const newTrip = await knex("events").where({ eventId }).first();
     res.status(201).json(newTrip);
