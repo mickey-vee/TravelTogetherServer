@@ -50,7 +50,10 @@ const addExpense = async (req, res) => {
     });
   }
   try {
+    const expenseId = randomUUID();
+
     await knex("expenses").insert({
+      expenseId,
       description,
       amount,
       date,
@@ -58,7 +61,7 @@ const addExpense = async (req, res) => {
       eventId: id,
     });
 
-    const newExpense = await knex("expenses").where("eventId", id);
+    const newExpense = await knex("expenses").where({ expenseId }).first();
     res.status(201).json(newExpense);
   } catch (error) {
     console.error(error);
@@ -66,4 +69,17 @@ const addExpense = async (req, res) => {
   }
 };
 
-export { tripInfo, createTrip, addExpense };
+const getExpenses = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const response = await knex("expenses")
+      .select("expenseId", "description", "amount", "date", "notes")
+      .where("eventId", id);
+    res.status(200).json(response);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error retrieving expense" });
+  }
+};
+
+export { tripInfo, createTrip, addExpense, getExpenses };

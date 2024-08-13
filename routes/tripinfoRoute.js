@@ -7,6 +7,9 @@ router.route("/tripinfo").post(tripInfo.createTrip);
 
 router.route("/tripinfo/:id").get(tripInfo.tripInfo);
 
-router.route("/expenses/:id").post(tripInfo.addExpense);
+router
+  .route("/expenses/:id")
+  .post(tripInfo.addExpense)
+  .get(tripInfo.getExpenses);
 
 export default router;
