@@ -75,7 +75,12 @@ const getExpenses = async (req, res) => {
     const response = await knex("expenses")
       .select("expenseId", "description", "amount", "date", "notes")
       .where("eventId", id);
-    res.status(200).json(response);
+
+    const [{ total }] = await knex("expenses")
+      .where("eventId", id)
+      .sum("amount as total");
+
+    res.status(200).json({ response, total: total || 0 });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Error retrieving expense" });
