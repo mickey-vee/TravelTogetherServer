@@ -39,4 +39,31 @@ const createTrip = async (req, res) => {
   }
 };
 
-export { tripInfo, createTrip };
+const addExpense = async (req, res) => {
+  const { id } = req.params;
+
+  const { description, amount, date, notes } = req.body;
+
+  if (!description || !amount || !date) {
+    return res.status(400).json({
+      message: "Please make sure to provide expense name, amount and date",
+    });
+  }
+  try {
+    await knex("expenses").insert({
+      description,
+      amount,
+      date,
+      notes,
+      eventId: id,
+    });
+
+    const newExpense = await knex("expenses").where("eventId", id);
+    res.status(201).json(newExpense);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error adding expense" });
+  }
+};
+
+export { tripInfo, createTrip, addExpense };
