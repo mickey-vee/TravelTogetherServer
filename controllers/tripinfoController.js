@@ -19,6 +19,7 @@ const tripInfo = async (req, res) => {
 };
 
 const createTrip = async (req, res) => {
+  const userId = req.userId;
   const { name, startDate, endDate } = req.body;
 
   if (!name || !startDate || !endDate) {
@@ -31,11 +32,15 @@ const createTrip = async (req, res) => {
     const eventId = randomUUID();
     await knex("events").insert({ eventId, name, startDate, endDate });
 
+    await knex("users").where({ userid: userId }).update({ eventid: eventId });
+
     const newTrip = await knex("events").where({ eventId }).first();
     res.status(201).json(newTrip);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error creating event" });
+    console.error("Error creating event:", error);
+    res
+      .status(500)
+      .json({ message: "Error creating event", error: error.message });
   }
 };
 

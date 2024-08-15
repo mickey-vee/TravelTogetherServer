@@ -1,8 +1,11 @@
 import express from "express";
 import * as tripInfo from "../controllers/tripinfoController.js";
 import * as userInfo from "../controllers/userController.js";
+import initKnex from "knex";
+import configuration from "../knexfile.js";
 
 const router = express.Router();
+const knex = initKnex(configuration);
 
 router.route("/tripinfo").post(tripInfo.createTrip);
 
@@ -15,5 +18,6 @@ router
   .delete(tripInfo.deleteExpense);
 
 router.route("/signup").post(userInfo.newUser);
+router.route("/login").post(userInfo.userLogin);
 
 export default router;

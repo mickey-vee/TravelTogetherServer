@@ -14,10 +14,8 @@ const newUser = async (req, res) => {
   }
   try {
     const userId = randomUUID();
-    const sessionToken = randomUUID();
 
     await knex("users").insert({
-      sessionToken: sessionToken,
       userid: userId,
       name,
       email,
@@ -32,4 +30,35 @@ const newUser = async (req, res) => {
   }
 };
 
-export { newUser };
+const userLogin = async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({
+      message: "Please provide email and password",
+    });
+  }
+
+  try {
+    const user = await knex("users").where({ email, password }).first();
+
+    if (!user) {
+      return res.status(401).json({
+        message: "Invalid email or password",
+      });
+    }
+
+    const sessionToken = randomUUID();
+    await knex("users").where({ userId: user.userid }).update({ sessionToken });
+
+    res.status(200).json({
+      user: { userid: user.userId, name: user.name, email: user.email },
+      sessionToken,
+    });
+  } catch (error) {
+    console.error("Error logging in user:", error);
+    res.status(500).json({ message: "Error logging in user" });
+  }
+};
+
+export { newUser, userLogin };
