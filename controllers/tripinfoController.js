@@ -73,7 +73,14 @@ const getExpenses = async (req, res) => {
   const { id } = req.params;
   try {
     const response = await knex("expenses")
-      .select("expenseId", "description", "amount", "date", "notes")
+      .select(
+        "expenseId",
+        "description",
+        "amount",
+        "date",
+        "notes",
+        "created_at"
+      )
       .where("eventId", id);
 
     const [{ total }] = await knex("expenses")
@@ -87,4 +94,25 @@ const getExpenses = async (req, res) => {
   }
 };
 
-export { tripInfo, createTrip, addExpense, getExpenses };
+const deleteExpense = async (req, res) => {
+  const { expenseId } = req.params;
+
+  try {
+    const rowsDeleted = await knex("expenses").where({ expenseId }).delete();
+
+    if (rowsDeleted === 0) {
+      return res.status(404).json({
+        message: `Expense ID ${expenseId} not found`,
+      });
+    }
+
+    res.sendStatus(204);
+  } catch (error) {
+    console.error(`Error deleting expense with ID ${expenseId}:`, error);
+    res.status(500).json({
+      message: `Unable to delete expense: ${error.message}`,
+    });
+  }
+};
+
+export { tripInfo, createTrip, addExpense, getExpenses, deleteExpense };
