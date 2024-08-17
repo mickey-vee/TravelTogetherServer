@@ -5,6 +5,7 @@ import { randomUUID } from "crypto";
 const knex = initKnex(configuration);
 
 const newUser = async (req, res) => {
+  const { id } = req.params;
   const { name, password, email } = req.body;
 
   if (!name || !password || !email) {
@@ -12,6 +13,7 @@ const newUser = async (req, res) => {
       message: "Please make sure to provide Full name, password and email",
     });
   }
+
   try {
     const userId = randomUUID();
 
@@ -22,7 +24,11 @@ const newUser = async (req, res) => {
       password,
     });
 
-    const newUser = await knex("users").where({ userId }).first();
+    if (id) {
+      await knex("users").where({ userid: userId }).update({ eventid: id });
+    }
+
+    const newUser = await knex("users").where({ userid: userId }).first();
     res.status(201).json(newUser);
   } catch (error) {
     console.error("Error adding user:", error);
@@ -61,4 +67,13 @@ const userLogin = async (req, res) => {
   }
 };
 
-export { newUser, userLogin };
+const getUsers = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await knex("users").where({ eventid: id });
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+export { newUser, userLogin, getUsers };

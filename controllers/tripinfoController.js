@@ -8,21 +8,40 @@ const tripInfo = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const response = await knex("events")
-      .select("eventId", "name", "startDate", "endDate")
-      .where("eventId", id);
-    res.status(200).json(response);
+    const event = await knex("events")
+      .select(
+        "eventId",
+        "name",
+        "startDate",
+        "endDate",
+        "latitude",
+        "longitude",
+        "address"
+      )
+      .where("eventId", id)
+      .first();
+
+    if (!event) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+    const users = await knex("users")
+      .select("userid", "name", "email")
+      .where("eventid", id);
+
+    res.status(200).json({ event, users });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error retrieving events" });
+    console.error("Error retrieving event and users:", error);
+    res.status(500).json({ message: "Error retrieving event and users" });
   }
 };
 
 const createTrip = async (req, res) => {
-  const userId = req.userId;
-  const { name, startDate, endDate } = req.body;
+  /*   const userId = req.userId; */
+  const { name, startDate, endDate, latitude, longitude, sessionToken } =
+    req.body;
 
-  if (!name || !startDate || !endDate) {
+  if (!name || !startDate || !endDate || !latitude || !longitude) {
     return res.status(400).json({
       message: "Please make sure to provide event name, start and end date",
     });
@@ -30,9 +49,18 @@ const createTrip = async (req, res) => {
 
   try {
     const eventId = randomUUID();
-    await knex("events").insert({ eventId, name, startDate, endDate });
+    await knex("events").insert({
+      eventId,
+      name,
+      startDate,
+      endDate,
+      latitude,
+      longitude,
+    });
 
-    await knex("users").where({ userid: userId }).update({ eventid: eventId });
+    await knex("users")
+      .where({ sessionToken: sessionToken })
+      .update({ eventid: eventId });
 
     const newTrip = await knex("events").where({ eventId }).first();
     res.status(201).json(newTrip);
