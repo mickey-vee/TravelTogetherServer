@@ -37,7 +37,6 @@ const tripInfo = async (req, res) => {
 };
 
 const createTrip = async (req, res) => {
-  /*   const userId = req.userId; */
   const { name, startDate, endDate, latitude, longitude, sessionToken } =
     req.body;
 
@@ -74,7 +73,6 @@ const createTrip = async (req, res) => {
 
 const addExpense = async (req, res) => {
   const { id } = req.params;
-
   const { description, amount, date, notes, userid } = req.body;
 
   if (!description || !amount || !date) {
@@ -82,6 +80,7 @@ const addExpense = async (req, res) => {
       message: "Please make sure to provide expense name, amount and date",
     });
   }
+
   try {
     const expenseId = randomUUID();
 
@@ -93,9 +92,32 @@ const addExpense = async (req, res) => {
       notes,
       eventId: id,
       userid,
+      amount_paid: amount,
     });
 
+    const users = await knex("users").where("eventId", id).select("userid");
+
+    const numberOfUsers = users.length;
+    const amountPerUser = amount / (numberOfUsers - 1);
+
+    const updatePromises = users
+      .filter((user) => user.userid !== userid)
+      .map((user) => {
+        return knex("expenses").insert({
+          expenseId: randomUUID(),
+          description: description,
+          amount_owed: amountPerUser,
+          date: date,
+          notes: notes,
+          eventId: id,
+          userid: user.userid,
+        });
+      });
+
+    await Promise.all(updatePromises);
+
     const newExpense = await knex("expenses").where({ expenseId }).first();
+
     res.status(201).json(newExpense);
   } catch (error) {
     console.error(error);
@@ -118,16 +140,41 @@ const getExpenses = async (req, res) => {
         "amount_paid",
         "amount_owed"
       )
-      .where("eventId", id);
+      .where("eventId", id)
+      .andWhere("amount_paid", ">", 0.0);
 
     const [{ total }] = await knex("expenses")
       .where("eventId", id)
-      .sum("amount as total");
+      .andWhere("amount_paid", ">", 0.0)
+      .sum("amount_paid as total");
 
     res.status(200).json({ response, total: total || 0 });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Error retrieving expense" });
+    res.status(500).json({ message: "Error retrieving expenses" });
+  }
+};
+
+const getAmountsOwed = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const response = await knex("expenses")
+      .select(
+        "expenseId",
+        "description",
+        "date",
+        "notes",
+        "created_at",
+        "userid",
+        "amount_owed"
+      )
+      .where("eventId", id)
+      .andWhere("amount_owed", ">", 0.0);
+
+    res.status(200).json({ response });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error retrieving expenses" });
   }
 };
 
@@ -152,4 +199,11 @@ const deleteExpense = async (req, res) => {
   }
 };
 
-export { tripInfo, createTrip, addExpense, getExpenses, deleteExpense };
+export {
+  tripInfo,
+  createTrip,
+  addExpense,
+  getExpenses,
+  deleteExpense,
+  getAmountsOwed,
+};

@@ -14,6 +14,8 @@ router
   .get(tripInfo.getExpenses)
   .delete(tripInfo.deleteExpense);
 
+router.route("/amounts-owed/:id").get(tripInfo.getAmountsOwed);
+
 router.route("/signup").post(userInfo.newUser);
 
 router.route("/signup/:id").post(userInfo.newUser);
