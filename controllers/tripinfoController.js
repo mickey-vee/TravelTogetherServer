@@ -75,7 +75,7 @@ const createTrip = async (req, res) => {
 const addExpense = async (req, res) => {
   const { id } = req.params;
 
-  const { description, amount, date, notes } = req.body;
+  const { description, amount, date, notes, userid } = req.body;
 
   if (!description || !amount || !date) {
     return res.status(400).json({
@@ -92,6 +92,7 @@ const addExpense = async (req, res) => {
       date,
       notes,
       eventId: id,
+      userid,
     });
 
     const newExpense = await knex("expenses").where({ expenseId }).first();
@@ -112,7 +113,10 @@ const getExpenses = async (req, res) => {
         "amount",
         "date",
         "notes",
-        "created_at"
+        "created_at",
+        "userid",
+        "amount_paid",
+        "amount_owed"
       )
       .where("eventId", id);
 
