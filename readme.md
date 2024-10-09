@@ -37,6 +37,11 @@ This is the backend for the Travel Together app, designed to facilitate group tr
    npx knex migrate:latest
    ```
 
+4. Start server
+   ```
+   npm start
+   ```
+
 ### Environment Variables
 
 Create a `.env` file in the root directory with the following content:
