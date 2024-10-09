@@ -137,16 +137,15 @@ const getExpenses = async (req, res) => {
         "notes",
         "created_at",
         "userid",
-        "amount_paid",
-        "amount_owed"
+        "amount_paid"
       )
       .where("eventId", id)
       .andWhere("amount_paid", ">", 0.0);
 
     const [{ total }] = await knex("expenses")
       .where("eventId", id)
-      .andWhere("amount_paid", ">", 0.0)
-      .sum("amount_paid as total");
+      .andWhere("amount", ">", 0.0)
+      .sum("amount as total");
 
     res.status(200).json({ response, total: total || 0 });
   } catch (error) {
